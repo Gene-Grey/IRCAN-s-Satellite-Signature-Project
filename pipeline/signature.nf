@@ -1,14 +1,9 @@
-#! /$HOME/nextflow
-
-params.mode = "ssr"
-params.kmer_size = 9
-params.inputs_dir = "/home/jargentin/Documents/projet_signature/inputs"
-params.out = "home/jargentin/Documents/projet_signature/outputs/signatures"
+#!/$HOME/nextflow
 
 log.info """\
 mode : $params.mode
-kmer_size : $params.kmer_size
 inputs_dir : $params.inputs_dir
+output_dir : $params.output_dir
 """
 
 reads = Channel.create()
@@ -36,39 +31,14 @@ process ComputeReadsFile {
 
   script:
   if( params.mode == "k_mer" )
-    """
-ssr
-    """
+//TO DO : Gerbil implementation
 
   else if( params.mode == "ssr" )
     """
     unpigz -cp16 $readsFile | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr "\t" "\n" > ${SRRCode}.fasta
-    kmer-ssr -d -p 3-25 -r 3 -R 25 -l 50 -L 300 -t 2 -i ${SRRCode}.fasta -o ${SRRCode}.tsv
+    kmer-ssr -d -p ${periodMin}-${periodMax} -r ${repeatMin} -R ${repeatMax} -l ${readLengthMin} -L ${readLengthMax} -t ${threads} -i ${SRRCode}.fasta -o ${SRRCode}.tsv
     """
 }
-
-
-/*
-process ParseComputedReadsFile {
-  tag "Splitting $SRRCode reads files"
-
-  input:
-  file(computedReadsFile) from ComputedReadsChannel
-
-  output:
-  file(parsedReadsFile) into ParsedReadsChannel
-
-  """
-  #!/usr/bin/env perl -w
-
-  use strict;
-
-  use JSON;
-
-
-    """
-}
-*/
 
 
 process PrintSignatureFile {
@@ -131,7 +101,7 @@ process PrintSignatureFile {
     my ($file) = @_;
     open (F, $file) or die("Can't open $file : \$!");
 
-    my @hash_array = ();
+    my @hash_array = ();java
 
     my %annotation_hash = ();
 
@@ -180,4 +150,18 @@ process PrintSignatureFile {
   print $pretty_printed;
 
   """
+}
+// <POSSIBLE IMPROVEMENT : Automatic hash dimension>
+
+
+workflow.onComplete {
+
+    sendMail(
+      to: notification.to
+      from: notification.from,
+      subject: "Signature pipeline on ${SRRCode} complete",
+      body: ${notification.template}.stripIndent(),
+      attach: "${output_dir}/${SRRCode}.json"
+      attach: 
+    )
 }
