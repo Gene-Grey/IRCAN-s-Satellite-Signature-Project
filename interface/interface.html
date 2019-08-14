@@ -1,5 +1,157 @@
+<!doctype html>
+
 <html>
-    <h1>
-        ISSB : IRCAN's Satellite Signature Builder
-    </h1>
+
+  <head>
+    <title>ISSI</title>
+
+    <meta charset="UTF-8">
+    <meta name="description" content="ISSB online Interface">
+    <meta name="keywords" content="Satellite, Signature, HTML,CSS,json,JavaScript, PHP, Perl, Nextflow">
+    <meta name="author" content="Joris Argentin">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    
+    <link rel="icon" href="http://unice.fr/recherche/laboratoires/ircan/@@images/contentleadimage/preview">    
+
+    <link rel="stylesheet" href="interface.css" />
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <!-- Google charts ! -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      // Load google charts
+      google.charts.load('current', {'packages':['corechart']});
+    </script>
+  </head>
+
+  <body>
+    <div class="jumbotron text-center" style="margin-bottom:0">
+      <div class="display-2">
+        I S S I
+      </div>
+      <p>IRCAN's Satellite Signature Interface</p> 
+    </div>
+
+    <div style="height: 12px; background-color: #343a40"></div>
+
+    <form class="bg-dark">
+      <div class="form-row">
+        <div id="connection" class="form-group col-md-1"> 
+          Connection 
+        </div>
+        <div class="form-group col-md-5 text-white">
+          <label for="inputEmail">Email</label>
+          <input type="email" class="form-control" id="inputEmail" placeholder="Email">
+        </div>
+        <div class="form-group col-md-5 text-white">
+          <label for="inputPassword">Password</label>
+          <input type="password" class="form-control" id="inputPassword" placeholder="Password">
+        </div>
+      </div>
+      <div class="form-row justify-content-center">
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary">Sign in</button>
+        </div>
+      </div>
+    </form>
+
+    <div style="height: 24px; background-color: #343a40"></div>
+
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark" id="navbar">
+      <a class="navbar-brand" href="#">Navbar</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-center" id="collapsibleNavbar">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#">Single signature analysis</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Dataset analysis (Coming soon)</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Database comparative analysis (Coming soon)</a>
+          </li>    
+      </ul>
+      </div>  
+    </nav>
+<br>
+<br>
+    <div class="form-row justify-content-center">
+      <div class="form-group col-md-6 justify-content-center">
+        <form>
+          <label for="exampleFormControlFile1">Satellites and annotations JSON File</label>
+          <input type="file" class="form-control-file" id="FormControlFile1">
+        </form>
+      </div>
+      <div class="col-md-1">
+        <h3>OR</h3>
+      </div>
+      <div class=" form-group col-md-5 justify-content-center">
+        <form>
+          <label for="exampleFormControlFile1">Example file input</label>
+          <input type="file" class="form-control-file" id="FormControlFile2">
+        </form>
+      </div>
+    </div>
+<br>
+<br>
+    <div class="container">
+      <table class="table table-bordered">
+        <div class="row">
+          <div class="col-sm-4 pull-left">
+            <h2>Metadata</h2>
+            <h5>Sampling</h5>
+              <p onLoad="buildHtmlTable('#excelDataTable')">
+                  <table id="excelDataTable" border="1">
+                  </table>
+                </p>
+            <hr class="d-sm-none">
+          </div>
+          <div class="col-sm-4">
+            <h2>
+              Satellite signature
+            </h2>
+            <input class="form-control" id="myInput" type="text" placeholder="Search..">
+            <div class="fakeimg">Fake Image</div>
+            <p>
+              Some text..
+            </p>
+          </div>
+          <div class="col-sm-4 pull-right">
+            <div>
+              <h2>
+                Charts
+              </h2>
+            </div>
+            <div id="columnchart" style="width: 100%; height: 100%;"></div>
+          </div>
+        </div>
+      </table>
+    </div>
+    <div class="jumbotron text-center" style="margin-bottom:0">
+      <p>Webapp by Joris Argentin</p> 
+    </div>
+    <script src="ISSI.js"></script>
+  </body>
 </html>
+
+<!-- Download button
+<div class="tab">
+  <button class="tablinks" onclick="openCity(event, 'London')">London</button>
+  <button class="tablinks" onclick="openCity(event, 'Paris')">Paris</button>
+  <button class="tablinks" onclick="openCity(event, 'Tokyo')">Tokyo</button>
+</div>
+-->
+
+
+<!-- Download button Auto width
+<button class="btn"><i class="fa fa-download"></i> Download</button>
+-->
+

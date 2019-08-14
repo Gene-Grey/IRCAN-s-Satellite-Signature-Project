@@ -3,14 +3,13 @@
 params.mode = "ssr"
 params.kmer_size = 9
 params.inputs_dir = "/home/jargentin/Documents/projet_signature/inputs"
-// params.out = "home/jargentin/Documents/projet_signature/outputs/signatures"
+params.out = "home/jargentin/Documents/projet_signature/outputs/signatures"
 
 log.info """\
 mode : $params.mode
 kmer_size : $params.kmer_size
 inputs_dir : $params.inputs_dir
 """
-// out : $params.out
 
 reads = Channel.create()
 metadata = Channel.create()
@@ -73,14 +72,16 @@ process ParseComputedReadsFile {
 
 
 process PrintSignatureFile {
-  tag "Splitting $SRRCode metadata files"
+  tag "Splitting $SRRCode metadata files into signature file"
 
   input:
   set SRRCode, file(metadataFile) from metadata
   file(computedReadsFile) from ComputedReadsChannel
 
+  publishDir params.out
+
   output:
-  stdout metadataResult
+  file "${SRRCode}.json"
 
   """
   #!/usr/bin/env perl
@@ -180,5 +181,3 @@ process PrintSignatureFile {
 
   """
 }
-
-metadataResult.subscribe { println it }
