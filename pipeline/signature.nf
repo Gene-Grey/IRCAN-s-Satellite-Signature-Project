@@ -42,7 +42,7 @@ process ComputeReadsFile {
 
 
 process PrintSignatureFile {
-  tag "Splitting $SRRCode metadata files into signature file"
+  tag "Merging $SRRCode metadata and SSR signature files into json file"
 
   input:
   set SRRCode, file(metadataFile) from metadata
@@ -120,7 +120,6 @@ process PrintSignatureFile {
         my @line_tab_split = split("\t", $line);
         splice(@line_tab_split, 0, 1);
 
-  # <POSSIBLE IMPROVEMENT : Automatic hash dimension>
         if ( scalar(@line_tab_split) == 2 ) {
           $annotation_hash{$hash_array[-1]}{$line_tab_split[0]} = $line_tab_split[1];
         }
