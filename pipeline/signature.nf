@@ -53,6 +53,7 @@ process PrintSignatureFile {
   output:
   file "${SRRCode}.json"
 
+  script:
   """
   #!/usr/bin/env perl
 
