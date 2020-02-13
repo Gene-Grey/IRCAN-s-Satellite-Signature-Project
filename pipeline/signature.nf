@@ -1,21 +1,15 @@
-#! /$HOME/nextflow
-
-params.mode = "ssr"
-params.kmer_size = 9
-params.inputs_dir = "/home/jargentin/Documents/projet_signature/inputs"
-// params.out = "home/jargentin/Documents/projet_signature/outputs/signatures"
+#! /usr/env/nextflow
 
 log.info """\
 mode : $params.mode
-kmer_size : $params.kmer_size
 inputs_dir : $params.inputs_dir
+output_dir : $params.output_dir
 """
-// out : $params.out
 
 reads = Channel.create()
 metadata = Channel.create()
 
-Channel.fromFilePairs("${params.inputs_dir}/SRR*{.metadata.txt,.filt.fastq.gz,.filt.fastq.zip}", size: 2, checkIfExists: 'true')
+Channel.fromFilePairs("${params.inputs_dir}/SRR*{.metadata.txt, .fastq.gz, .filt.fastq.zip}", size: 2, checkIfExists: 'true')
        .map { left, right ->
          def SRRCode = left
          def readsFile = right[0]
@@ -23,7 +17,6 @@ Channel.fromFilePairs("${params.inputs_dir}/SRR*{.metadata.txt,.filt.fastq.gz,.f
          tuple(SRRCode, readsFile, metadataFile)
        }
        .into { reads; metadata }
-
 
 
 process ComputeReadsFile {
@@ -36,149 +29,150 @@ process ComputeReadsFile {
   file(computedReadsFile) into ComputedReadsChannel
 
   script:
-  if( params.mode == "k_mer" )
-    """
-ssr
-    """
-
-  else if( params.mode == "ssr" )
-    """
-    unpigz -cp16 $readsFile | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr "\t" "\n" > ${SRRCode}.fasta
-    kmer-ssr -d -p 3-25 -r 3 -R 25 -l 50 -L 300 -t 2 -i ${SRRCode}.fasta -o ${SRRCode}.tsv
-    """
+    if( params.mode == "ssr" ) {
+      """
+      unpigz -cp16 $readsFile | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr "\t" "\n" > ${SRRCode}.fasta
+      kmer-ssr -d -p $params.kmerSSR.periodMin-$params.kmerSSR.periodMax -r $params.kmerSSR.repeatMin -R $params.kmerSSR.repeatMax -l $params.kmerSSR.readLengthMin -L $params.kmerSSR.readLengthMax -t $params.kmerSSR.threads -i ${SRRCode}.fasta -o ${SRRCode}.tsv
+      """
+    }
 }
-
-
-/*
-process ParseComputedReadsFile {
-  tag "Splitting $SRRCode reads files"
-
-  input:
-  file(computedReadsFile) from ComputedReadsChannel
-
-  output:
-  file(parsedReadsFile) into ParsedReadsChannel
-
-  """
-  #!/usr/bin/env perl -w
-
-  use strict;
-
-  use JSON;
-
-
-    """
-}
-*/
 
 
 process PrintSignatureFile {
-  tag "Splitting $SRRCode metadata files"
+  tag "Merging $SRRCode metadata and SSR signature files into json file"
 
   input:
   set SRRCode, file(metadataFile) from metadata
   file(computedReadsFile) from ComputedReadsChannel
 
+  publishDir params.output_dir
+
   output:
-  stdout metadataResult
+  file "${SRRCode}.json"
 
   """
-  #!/usr/bin/env perl
 
-  use strict;
-  use warnings;
+import os
+import sys
+import json
 
-  use JSON;
+def hash_metadata(metadata_file):
+    ""
+        Takes the .csv or .tsv Kmer-SSR output file
+        and formats it in a python dictionnary;
+        second part of the signature file
+    ""
 
-  sub processSatellitesDetection {
-    my ($file) = @_;
-    open (F, $file) or die("Can't open $file : \$!");
+    metadata = {}
+    remarks = []
 
-    my $lineCounter = 0;
+    for line in metadata_file:
+        tab_split_line = line.strip('\n').split('\t')
 
-    my %satellites = ();
+        if len(tab_split_line) == 2:
+            metadata[tab_split_line[0]] = tab_split_line[1]
 
-    foreach my $line (<F>){
+        elif len(tab_split_line) == 3 and tab_split_line[0] == '':
+            remarks.append(tab_split_line[2])
 
-      if($lineCounter == 0) {
-        $lineCounter++;        
-        next;
-      }
+    metadata.update({"remarks": remarks})
 
-      chomp $line;
-
-      my @line_tab_split = split("\t", $line);
-      my $motif = "\\($line_tab_split[1]\\)$line_tab_split[2]";
-
-      if(exists $satellites{$motif}) {
-        $satellites{$motif}++;
-      }
-
-      else {
-        $satellites{$motif} = 1;
-      }
-
-      $lineCounter++;
-    }
-
-    close F;
-    return %satellites;
-  }
+    return metadata
 
 
-  sub annotation_process {
-    my ($file) = @_;
-    open (F, $file) or die("Can't open $file : \$!");
 
-    my @hash_array = ();
+def hash_kmerssr_output(kmerssr_output_file, has_header, formatting):
+# Recieves and checks both inputs, calls formatting funtions and outputs the .json file
 
-    my %annotation_hash = ();
+    kmerssr_dict = {}
 
-    foreach my $line (<F>){
-      chomp $line;
+    if formatting == "csv":
+        formatting_key = ','
 
-      if ($line =~ /^(\\w+)\$/gs) { # Case 1 : an array title
-        push @hash_array, \$1;
-      }
+    elif formatting == "tsv":
+        formatting_key = "\t"
 
-      elsif ($line eq ("\n" or "\r")) {
-        next;
-      }
+    for line in kmerssr_output_file:
+        if has_header:
+            has_header = False
+            continue
 
-      else {
-        my @line_tab_split = split("\t", $line);
-        splice(@line_tab_split, 0, 1);
+        tab_split_line = line.strip('\n').split(formatting_key)
+        ssr_key = tab_split_line[1]
+        repeats_key = int(tab_split_line[2])
 
-  # <POSSIBLE IMPROVEMENT : Automatic hash dimension>
-        if ( scalar(@line_tab_split) == 2 ) {
-          $annotation_hash{$hash_array[-1]}{$line_tab_split[0]} = $line_tab_split[1];
-        }
+        try:
+            kmerssr_dict[ssr_key]
+        except KeyError:
+            kmerssr_dict[ssr_key] = {}
+            kmerssr_dict[ssr_key]["total"] = 0
 
-        elsif ( scalar(@line_tab_split) == 3 ) {
-          $annotation_hash{$hash_array[-1]}{$line_tab_split[0]}{$line_tab_split[1]} = $line_tab_split[2];
-        } # The last value of the array is the hash value, every other one are hash keys
+        try:
+            kmerssr_dict[ssr_key][repeats_key]
+        except KeyError:
+            kmerssr_dict[ssr_key][repeats_key] = 0
 
-        else {
-          next;
-        }
-      }
-    }
+        kmerssr_dict[ssr_key][repeats_key] += 1
+        kmerssr_dict[ssr_key]["total"] += 1
 
-    close F;
-    return %annotation_hash;
-  }
+    ordered_list = sorted(kmerssr_dict, key=lambda x: kmerssr_dict[x]["total"])
+    ssr_dict = {}
+
+    for key in ordered_list:
+        ssr_dict[key] = kmerssr_dict[key]
+
+    return ssr_dict
 
 
-  my %annotation_hash = processSatellitesDetection($computedReadsFile);
-  my %satellites = annotation_process($metadataFile);
 
-  %annotation_hash = (%annotation_hash, %satellites);
+def main():
+# Recieves and checks both inputs, calls formatting funtions and outputs the .json file
 
-  my $json = JSON->new;
-  my $pretty_printed = $json->pretty->encode(\\%annotation_hash);
-  print $pretty_printed;
+    formatting = ""
+    satellite_content = list(open($computedReadsFile, "r"))
+    metadata_content = list(open($metadataFile, "r"))
+    formatting = $computedReadsFile.split(os.extsep)[-1]
+
+    metadata = hash_metadata(metadata_content)
+    ssr_content = {}
+
+    if satellite_content[0].strip('\n').split('\t')[0] == "#Sequence_Name":
+        ssr_content = hash_kmerssr_output(satellite_content, True, formatting)
+
+    elif satellite_content[0].strip('\n').split('\t')[0] != "#Sequence_Name":
+        ssr_content = hash_kmerssr_output(satellite_content, False, formatting)
+
+    signature = {**metadata, **ssr_content}
+
+    with open('./' + $SRRCode + '.json', 'w') as file_output:
+        json.dump(signature, file_output, indent=2, sort_keys=False)
+
+
+if __name__ == "__main__":
+    main()
+
 
   """
 }
 
-metadataResult.subscribe { println it }
+
+// workflow.onComplete {
+//   def msg = template = """\
+//         Pipeline execution summary
+//         ---------------------------
+//         Completed at: ${workflow.complete}
+//         Duration    : ${workflow.duration}
+//         Success     : ${workflow.success}
+//         workDir     : ${workflow.workDir}
+//         exit status : ${workflow.exitStatus}
+//         """
+//         .stripIndent()
+// 
+//     sendMail(
+//       to: ${notification.to},
+//       from: ${notification.from},
+//       subject: "Signature pipeline on ${SRRCode} complete",
+//       body: ${msg}.stripIndent(),
+//       attach: "${output_dir}/${SRRCode}.json",
+//     )
+// }
