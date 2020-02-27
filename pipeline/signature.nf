@@ -1,167 +1,256 @@
 #!/$HOME/nextflow
 
-log.info """\
-mode : $params.mode
-inputs_dir : $params.inputs_dir
-output_dir : $params.output_dir
-"""
+def helpMessage() {
+    log.info"""
+    =========================================
+     ISSB v${params.version}
+    =========================================
+    Usage:
+    The typical command for running the pipeline is as follows:
+    nextflow run signature.nf --reads_input_dir ./inputs --metadata_input_dir ./inputs --output_dir ./outputs --kmerSSR.threads 16
+    
+    Required arguments:
+        --sequence_mode                Configuration profile to use. <fastq_files, ncbi_ids>
+        --reads_input_dir              Specifies the reads input files folder.
+        --metadata_input_dir           Specifies the metadata input files folder.
+         
+    Performance options:
+        --kmerSSR.threads              Runs multi-threading for kmer-ssr processing.
 
-reads = Channel.create()
-metadata = Channel.create()
+    Output File options:
+        --output_dir                   Specifies the directory in which the files are published (default is the working directory).
+        
+    Kmer-ssr options:
+        --kmerSSR.periodMin            Minimum period size in a single SSR
+        --kmerSSR.periodMax            Maximum period size in a single SSR
+        --kmerSSR.repeatMin            Minimum value for the number of repeat in a single SSR
+        --kmerSSR.repeatMax            Maximum value for the number of repeat in a single SSR
+        --kmerSSR.readLengthMin        Minimum number of bases for a read to be computed
+        --kmerSSR.readLengthMax        Maximum number of bases for a read to be computed
+        --kmerSSR.ssrSizeTreshold
 
-Channel.fromFilePairs("${params.inputs_dir}/SRR*{.metadata.txt,.filt.fastq.gz,.filt.fastq.zip}", size: 2, checkIfExists: 'true')
-       .map { left, right ->
-         def SRRCode = left
-         def readsFile = right[0]
-         def metadataFile = right[1]
-         tuple(SRRCode, readsFile, metadataFile)
-       }
-       .into { reads; metadata }
+    Report options :
+        --report.enabled               Enables the Nexflow run report
+        --timeline.enabled             Enables the Nextflow timeline report
+    """.stripIndent()
+}
 
+
+log.info """=======================================================
+ISSB v${params.version}"
+======================================================="""
+def summary = [:]
+summary['Pipeline Name']                                             = 'ISSB'
+summary['Help Message']                                              = params.help
+summary['Pipeline Version']                                          = params.version
+summary['Current home']                                              = "$HOME"
+summary['Current user']                                              = "$USER"
+summary['Current path']                                              = "$PWD"
+summary['Sequence gathering mode']                                   = params.sequence_mode
+summary['Max forking option']                                        = params.threads
+summary['NCBI API Key']                                              = params.apiKey
+summary['Kmer-SSR minimum SSR period size']                          = params.kmerSSR.periodMin
+summary['Kmer-SSR maximum SSR period size']                          = params.kmerSSR.periodMax
+summary['Kmer-SSR minimum SSR size']                                 = params.kmerSSR.ssrSizeTreshold
+summary['Kmer-SSR minimum SSR repeat size']                          = params.kmerSSR.repeatMin
+summary['Kmer-SSR maximum SSR repeat size']                          = params.kmerSSR.repeatMax
+summary['Kmer-SSR minimum SSR period size']                          = params.kmerSSR.readLengthMin
+summary['Kmer-SSR maximum SSR period size']                          = params.kmerSSR.readLengthMax
+if(params.sequence_mode == "files") summary['Reads input dir']       = params.reads_input_dir
+if(params.sequence_mode == "ncbi_ids") summary['Metadata input dir'] = params.metadata_input_dir
+summary['File output dir']                                           = params.output_dir
+log.info summary.collect { k,v -> "${k.padRight(15)}: $v" }.join("\n")
+log.info "======================================================="
+
+if (params.help) {
+    helpMessage()
+    exit 0
+}
+
+ids = []
+Reads = Channel.fromPath("${params.reads_input_dir}/*.*sv")
+               .map { file -> 
+                def key = file.getSimpleName()
+                return tuple(key, file)
+               }
+
+
+if(params.sequence_mode == "ncbi_ids") {
+    Channel.fromPath("${params.reads_input_dir}/*.id.txt")
+           .subscribe onNext: {
+                all_ids = it.readLines()
+
+                for( id in all_ids ) {
+                    ids.add(id)
+                }
+            }
+
+    Reads = Channel.fromSRA(ids, apiKey: params.apiKey)
+        .flatMap { left, right ->
+            def SRRCode = left
+            switch(right) {
+                case { right.getClass() == java.util.ArrayList && right.size() == 2 }:
+                    def forward = right[0]
+                    def reverse = right[1]
+                    return [tuple(SRRCode.concat("_1"), forward), tuple(SRRCode.concat("_2"), reverse)]
+
+                case { right.getClass() == java.util.ArrayList && right.size() == 3 }:
+                    def forward = right[1]
+                    def reverse = right[2]
+                    return [tuple(SRRCode.concat("_1"), forward), tuple(SRRCode.concat("_2"), reverse)]
+
+                case right.getClass() == nextflow.file.http.XPath:
+                    def sequence = right
+                    return [tuple(SRRCode, sequence)]
+            }
+        }
+}
+
+else if(params.sequence_mode == "fastq_files") {
+    Reads = Channel.fromPath("${params.reads_input_dir}/*.fa*")
+        .map { file ->
+            def key = file.getSimpleName()
+            ids.add(key)
+            return tuple(key, file)
+        }
+}
 
 
 process ComputeReadsFile {
-  tag "Splitting $SRRCode reads files"
+    tag "Processing $fileCode reads files using kmer-ssr"
+    maxForks params.threads
 
-  input:
-  set SRRCode, file(readsFile), file(metadataFile) from reads
+    input:
+    set fileCode, file(readsFile) from Reads
 
-  output:
-  file(computedReadsFile) into ComputedReadsChannel
+    output:
+    tuple fileCode, file("${fileCode}.tsv") into ComputedReads
 
-  script:
-  if( params.mode == "k_mer" )
-//TO DO : Gerbil implementation
-
-  else if( params.mode == "ssr" )
+    script:
     """
-    unpigz -cp16 $readsFile | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr "\t" "\n" > ${SRRCode}.fasta
-    kmer-ssr -d -p ${periodMin}-${periodMax} -r ${repeatMin} -R ${repeatMax} -l ${readLengthMin} -L ${readLengthMax} -t ${threads} -i ${SRRCode}.fasta -o ${SRRCode}.tsv
+    unpigz -cp16 $readsFile | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr "\\t" "\\n" > ${fileCode}.fasta
+    kmer-ssr -d -p ${params.kmerSSR.periodMin}-${params.kmerSSR.periodMax} -n ${params.kmerSSR.ssrSizeTreshold} -r ${params.kmerSSR.repeatMin} -R ${params.kmerSSR.repeatMax} -l ${params.kmerSSR.readLengthMin} -L ${params.kmerSSR.readLengthMax} -i ${fileCode}.fasta -o ${fileCode}.tsv
     """
 }
+
+Metadata = Channel.fromPath("${params.metadata_input_dir}/*.metadata.txt")
+        .map { file ->
+            def key = file.getSimpleName()
+            return tuple(key, file)
+        }
+
+AssociatedFiles = ComputedReads
+               .join(Metadata)
 
 
 process PrintSignatureFile {
-  tag "Merging $SRRCode metadata and SSR signature files into json file"
+  tag "Merging $fileCode metadata and SSR signature files into complete signature json file"
+
+  publishDir params.output_dir
 
   input:
-  set SRRCode, file(metadataFile) from metadata
-  file(computedReadsFile) from ComputedReadsChannel
-
-  publishDir params.out
+  set fileCode, file(computedReadsFile), file(metadataFile) from AssociatedFiles
 
   output:
-  file "${SRRCode}.json"
+  file "${fileCode}.json"
 
   script:
-  """
-  #!/usr/bin/env perl
+"""
+#!/usr/bin/env python3
 
-  use strict;
-  use warnings;
+import os
+import sys
+import json
+from collections import OrderedDict
 
-  use JSON;
+def hash_metadata(metadata_file):
+    metadata = {}
+    remarks = []
 
-  sub processSatellitesDetection {
-    my ($file) = @_;
-    open (F, $file) or die("Can't open $file : \$!");
+    for line in metadata_file:
+        tab_split_line = line.strip("\\n").split("\\t")
 
-    my $lineCounter = 0;
+        if len(tab_split_line) == 2:
+            metadata[tab_split_line[0]] = tab_split_line[1]
 
-    my %satellites = ();
+        elif len(tab_split_line) == 3 and tab_split_line[0] == '':
+            remarks.append(tab_split_line[2])
 
-    foreach my $line (<F>){
+    metadata.update({'remarks': remarks})
 
-      if($lineCounter == 0) {
-        $lineCounter++;        
-        next;
-      }
+    return metadata
 
-      chomp $line;
+def hash_kmerssr_output(kmerssr_output_file, has_header, formatting_key):
+    kmerssr_dict = {}
 
-      my @line_tab_split = split("\t", $line);
-      my $motif = "\\($line_tab_split[1]\\)$line_tab_split[2]";
+    for line in kmerssr_output_file:
+        if has_header:
+            has_header = False
+            continue
 
-      if(exists $satellites{$motif}) {
-        $satellites{$motif}++;
-      }
+        tab_split_line = line.strip('\\n').split(formatting_key)
+        ssr_key = tab_split_line[1]
+        repeats_key = int(tab_split_line[2])
 
-      else {
-        $satellites{$motif} = 1;
-      }
+        try:
+            kmerssr_dict[ssr_key]
+        except KeyError:
+            kmerssr_dict[ssr_key] = {}
+            kmerssr_dict[ssr_key]['total'] = 0
 
-      $lineCounter++;
-    }
+        try:
+            kmerssr_dict[ssr_key][repeats_key]
+        except KeyError:
+            kmerssr_dict[ssr_key][repeats_key] = 0
 
-    close F;
-    return %satellites;
-  }
+        kmerssr_dict[ssr_key][repeats_key] += 1
+        kmerssr_dict[ssr_key]['total'] += 1
 
+    ordered_list = sorted(kmerssr_dict, key=lambda x: kmerssr_dict[x]['total'])
+    ssr_dict = {}
 
-  sub annotation_process {
-    my ($file) = @_;
-    open (F, $file) or die("Can't open $file : \$!");
+    for key in ordered_list:
+        ssr_dict[key] = kmerssr_dict[key]
 
-    my @hash_array = ();java
-
-    my %annotation_hash = ();
-
-    foreach my $line (<F>){
-      chomp $line;
-
-      if ($line =~ /^(\\w+)\$/gs) { # Case 1 : an array title
-        push @hash_array, \$1;
-      }
-
-      elsif ($line eq ("\n" or "\r")) {
-        next;
-      }
-
-      else {
-        my @line_tab_split = split("\t", $line);
-        splice(@line_tab_split, 0, 1);
-
-        if ( scalar(@line_tab_split) == 2 ) {
-          $annotation_hash{$hash_array[-1]}{$line_tab_split[0]} = $line_tab_split[1];
-        }
-
-        elsif ( scalar(@line_tab_split) == 3 ) {
-          $annotation_hash{$hash_array[-1]}{$line_tab_split[0]}{$line_tab_split[1]} = $line_tab_split[2];
-        } # The last value of the array is the hash value, every other one are hash keys
-
-        else {
-          next;
-        }
-      }
-    }
-
-    close F;
-    return %annotation_hash;
-  }
+    return ssr_dict
 
 
-  my %annotation_hash = processSatellitesDetection($computedReadsFile);
-  my %satellites = annotation_process($metadataFile);
+def main():
+    signature_path = ''
+    formatting = ''
 
-  %annotation_hash = (%annotation_hash, %satellites);
+    metadata_content = list(open("./$metadataFile", 'r'))
+    satellite_content = list(open("./$computedReadsFile", 'r'))
 
-  my $json = JSON->new;
-  my $pretty_printed = $json->pretty->encode(\\%annotation_hash);
-  print $pretty_printed;
+    signature_path = "./$computedReadsFile"
+    signature_path = signature_path.split(os.extsep)[-2]
 
-  """
-}
-// <POSSIBLE IMPROVEMENT : Automatic hash dimension>
+    formatting = "./$computedReadsFile"
+    formatting = formatting.split(os.extsep)[-1]
 
+    if formatting == 'csv':
+        formatting_key = ','
 
-workflow.onComplete {
+    elif formatting == 'tsv':
+        formatting_key = '\t'
 
-    sendMail(
-      to: notification.to
-      from: notification.from,
-      subject: "Signature pipeline on ${SRRCode} complete",
-      body: ${notification.template}.stripIndent(),
-      attach: "${output_dir}/${SRRCode}.json"
-      attach: 
-    )
+    metadata = hash_metadata(metadata_content)
+    ssr_content = {}
+
+    if satellite_content[0].strip('\\n').split(formatting_key)[0] == '#Sequence_Name':
+        ssr_content = hash_kmerssr_output(satellite_content, True, formatting_key)
+
+    elif satellite_content[0].strip('\\n').split(formatting_key)[0] != '#Sequence_Name':
+        ssr_content = hash_kmerssr_output(satellite_content, False, formatting_key)
+
+    signature = OrderedDict()
+    signature['metadata'] = metadata
+    signature['ssr'] = ssr_content
+
+    with open('./' + signature_path + '.json', 'w') as file_output:
+        json.dump(signature, file_output, indent=2, sort_keys=False)
+
+if __name__ == "__main__":
+    main()
+"""
 }
