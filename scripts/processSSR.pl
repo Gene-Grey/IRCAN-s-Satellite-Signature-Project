@@ -52,7 +52,7 @@ sub annotation_process {
     chomp $line;
 
     if ($line =~ /^(\w+)$/gs) { # Case 1 : an array title
-      push(@hash_array, $1);
+      push @hash_array, \$1;
     }
 
     elsif ($line eq ("\n" or "\r")) {
@@ -81,6 +81,12 @@ sub annotation_process {
   close F;
   return %annotation_hash;
 }
+
+
+#my %annotation_hash = processSatellitesDetection($computedReadsFile);
+#my %satellites annotation_process($metadataFile);
+
+#%annotation_hash = (%annotation_hash, %satellites);
 
 my %annotation_hash = processSatellitesDetection($ARGV[0]);
 my %satellites = annotation_process($ARGV[1]);
