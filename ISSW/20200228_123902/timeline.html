@@ -1,0 +1,298 @@
+<!doctype html>
+<!--
+  ~ Copyright 2013-2019, Centre for Genomic Regulation (CRG)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<script type="text/javascript">
+var prot = (("https:" == document.location.protocol) ? "https://" : "http://");
+document.write(unescape("%3Cscript src='" + prot + "code.jquery.com/jquery-latest.min.js' type='text/javascript' %3E%3C/script%3E"));
+document.write(unescape("%3Cscript src='" + prot + "d3js.org/d3.v3.min.js' charset='utf-8' type='text/javascript' %3E%3C/script%3E"));
+document.write(unescape("%3Cscript src='" + prot + "cdn.rawgit.com/nextflow-io/d3-timeline/82622c4cc35bac7283b3a317826b0709ac1ae476/src/d3-timeline.js' type='text/javascript' %3E%3C/script%3E"));
+</script>
+<style type="text/css">
+* {
+  font-family: 'Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif;
+}
+
+.axis path,
+.axis line {
+fill: none;
+  stroke: black;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+  font-size: 10px;
+}
+
+div#timeline g text {
+  font-size: 13px;
+}
+
+text.timeline-label {
+  font-size: 13px;
+}
+
+#timeline2 .axis {
+  transform: translate(0px,30px);
+  -ms-transform: translate(0px,30px); /* IE 9 */
+  -webkit-transform: translate(0px,30px); /* Safari and Chrome */
+  -o-transform: translate(0px,30px); /* Opera */
+  -moz-transform: translate(0px,30px); /* Firefox */
+}
+
+.coloredDiv {
+  height:20px; width:20px; float:left;
+}
+
+#footer {
+  padding-top: 3em; color: #bfbfbf; font-size: 13px;
+}
+
+#footer a:visited {
+  color: #bfbfbf;
+  text-decoration: underline;
+}
+</style>
+<script type="text/javascript">
+var handler=null;
+// see https://github.com/mbostock/d3/wiki/Ordinal-Scales#category20c
+var colors = d3.scale.category20c().domain(d3.range(0,20)).range()
+
+function c0(index) { return "#9c9c9c"; }
+function c1(index) { return "#bdbdbd"; }
+function c2(index) { return colors[index % 16]; } // <-- note: uses only the first 16 colors
+
+var elapsed="2d 22h 1m 26s"
+var beginningMillis=1582907493643;
+var endingMillis=1583159579664;
+var data=[
+{"label": "ComputeReadsFile (Processing SRR7171661_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907496655, "ending_time": 1582907496725, "color":c1(0)}, {"starting_time": 1582907496725, "ending_time": 1583066342794, "color":c2(0), "label": "1d 20h 7m 27s \/ 11.8 MB"}, {"starting_time": 1583066342794, "ending_time": 1583066343184, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171661_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907496687, "ending_time": 1582907496735, "color":c1(0)}, {"starting_time": 1582907496735, "ending_time": 1583104284875, "color":c2(0), "label": "2d 6h 39m 49s \/ 11.7 MB"}, {"starting_time": 1583104284875, "ending_time": 1583104285510, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171662_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907496701, "ending_time": 1582907496737, "color":c1(0)}, {"starting_time": 1582907496737, "ending_time": 1583055062912, "color":c2(0), "label": "1d 16h 59m 27s \/ 11.8 MB"}, {"starting_time": 1583055062912, "ending_time": 1583055063624, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171662_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907496734, "ending_time": 1582907496808, "color":c1(0)}, {"starting_time": 1582907496808, "ending_time": 1583049313758, "color":c2(0), "label": "1d 15h 23m 37s \/ 11.7 MB"}, {"starting_time": 1583049313758, "ending_time": 1583049314204, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171663_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907496745, "ending_time": 1582907496810, "color":c1(0)}, {"starting_time": 1582907496810, "ending_time": 1583044587806, "color":c2(0), "label": "1d 14h 4m 52s \/ 11.7 MB"}, {"starting_time": 1583044587806, "ending_time": 1583044588264, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171663_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907496777, "ending_time": 1582907496812, "color":c1(0)}, {"starting_time": 1582907496812, "ending_time": 1583027448331, "color":c2(0), "label": "1d 9h 19m 12s \/ 11.6 MB"}, {"starting_time": 1583027448331, "ending_time": 1583027448849, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171664_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907496943, "ending_time": 1582907497009, "color":c1(0)}, {"starting_time": 1582907497009, "ending_time": 1582985512674, "color":c2(0), "label": "21h 40m 16s \/ 11.7 MB"}, {"starting_time": 1582985512674, "ending_time": 1582985513293, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171664_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907496967, "ending_time": 1582907497012, "color":c1(0)}, {"starting_time": 1582907497012, "ending_time": 1582989894150, "color":c2(0), "label": "22h 53m 18s \/ 11.7 MB"}, {"starting_time": 1582989894150, "ending_time": 1582989894705, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171665_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907497207, "ending_time": 1582907497312, "color":c1(0)}, {"starting_time": 1582907497312, "ending_time": 1583083778385, "color":c2(0), "label": "2d 58m 2s \/ 11.8 MB"}, {"starting_time": 1583083778385, "ending_time": 1583083779027, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171665_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907497231, "ending_time": 1582907497315, "color":c1(0)}, {"starting_time": 1582907497315, "ending_time": 1583065597437, "color":c2(0), "label": "1d 19h 55m 1s \/ 11.8 MB"}, {"starting_time": 1583065597437, "ending_time": 1583065598162, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171666_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907497487, "ending_time": 1582907497612, "color":c1(0)}, {"starting_time": 1582907497612, "ending_time": 1583070410188, "color":c2(0), "label": "1d 21h 15m 13s \/ 11.8 MB"}, {"starting_time": 1583070410188, "ending_time": 1583070410874, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171666_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907497502, "ending_time": 1582907497614, "color":c1(0)}, {"starting_time": 1582907497614, "ending_time": 1583045915745, "color":c2(0), "label": "1d 14h 27m 2s \/ 11.8 MB"}, {"starting_time": 1583045915745, "ending_time": 1583045919203, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171667_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907497861, "ending_time": 1582907498013, "color":c1(0)}, {"starting_time": 1582907498013, "ending_time": 1583067266281, "color":c2(0), "label": "1d 20h 22m 49s \/ 11.6 MB"}, {"starting_time": 1583067266281, "ending_time": 1583067266913, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171667_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907497896, "ending_time": 1582907498016, "color":c1(0)}, {"starting_time": 1582907498016, "ending_time": 1583053622290, "color":c2(0), "label": "1d 16h 35m 26s \/ 11.8 MB"}, {"starting_time": 1583053622290, "ending_time": 1583053623507, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171668_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907498081, "ending_time": 1582907498113, "color":c1(0)}, {"starting_time": 1582907498113, "ending_time": 1583053553523, "color":c2(0), "label": "1d 16h 34m 16s \/ 11.6 MB"}, {"starting_time": 1583053553523, "ending_time": 1583053554386, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171668_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907498176, "ending_time": 1582907498214, "color":c1(0)}, {"starting_time": 1582907498214, "ending_time": 1583065862542, "color":c2(0), "label": "1d 19h 59m 25s \/ 11.7 MB"}, {"starting_time": 1583065862542, "ending_time": 1583065863311, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171669_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907498414, "ending_time": 1582907498520, "color":c1(0)}, {"starting_time": 1582907498520, "ending_time": 1583042600143, "color":c2(0), "label": "1d 13h 31m 43s \/ 11.6 MB"}, {"starting_time": 1583042600143, "ending_time": 1583042601310, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171669_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907498431, "ending_time": 1582907498524, "color":c1(0)}, {"starting_time": 1582907498524, "ending_time": 1583013196186, "color":c2(0), "label": "1d 5h 21m 39s \/ 11.7 MB"}, {"starting_time": 1583013196186, "ending_time": 1583013197263, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171670_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907498670, "ending_time": 1582907498719, "color":c1(0)}, {"starting_time": 1582907498719, "ending_time": 1583060061927, "color":c2(0), "label": "1d 18h 22m 44s \/ 11.6 MB"}, {"starting_time": 1583060061927, "ending_time": 1583060062853, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171670_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907498736, "ending_time": 1582907498823, "color":c1(0)}, {"starting_time": 1582907498823, "ending_time": 1583036556071, "color":c2(0), "label": "1d 11h 50m 59s \/ 11.8 MB"}, {"starting_time": 1583036556071, "ending_time": 1583036557310, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171671_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907498891, "ending_time": 1582907498920, "color":c1(0)}, {"starting_time": 1582907498920, "ending_time": 1583065414765, "color":c2(0), "label": "1d 19h 51m 57s \/ 11.8 MB"}, {"starting_time": 1583065414765, "ending_time": 1583065415703, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171671_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907498945, "ending_time": 1582907499123, "color":c1(0)}, {"starting_time": 1582907499123, "ending_time": 1583054437207, "color":c2(0), "label": "1d 16h 48m 59s \/ 11.5 MB"}, {"starting_time": 1583054437207, "ending_time": 1583054438052, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171672_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907499292, "ending_time": 1582907499332, "color":c1(0)}, {"starting_time": 1582907499332, "ending_time": 1583041140987, "color":c2(0), "label": "1d 13h 7m 23s \/ 11.7 MB"}, {"starting_time": 1583041140987, "ending_time": 1583041142312, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171672_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907499338, "ending_time": 1582907499433, "color":c1(0)}, {"starting_time": 1582907499433, "ending_time": 1583048207637, "color":c2(0), "label": "1d 15h 5m 10s \/ 11.7 MB"}, {"starting_time": 1583048207637, "ending_time": 1583048208850, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171673_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907499506, "ending_time": 1582907499534, "color":c1(0)}, {"starting_time": 1582907499534, "ending_time": 1583061301267, "color":c2(0), "label": "1d 18h 43m 23s \/ 11.6 MB"}, {"starting_time": 1583061301267, "ending_time": 1583061302487, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171673_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907499543, "ending_time": 1582907499634, "color":c1(0)}, {"starting_time": 1582907499634, "ending_time": 1583049858438, "color":c2(0), "label": "1d 15h 32m 41s \/ 11.6 MB"}, {"starting_time": 1583049858438, "ending_time": 1583049860057, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171674_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907499831, "ending_time": 1582907499936, "color":c1(0)}, {"starting_time": 1582907499936, "ending_time": 1583066631881, "color":c2(0), "label": "1d 20h 12m 13s \/ 11.8 MB"}, {"starting_time": 1583066631881, "ending_time": 1583066633085, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171674_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907499848, "ending_time": 1582907499938, "color":c1(0)}, {"starting_time": 1582907499938, "ending_time": 1583034832718, "color":c2(0), "label": "1d 11h 22m 15s \/ 11.7 MB"}, {"starting_time": 1583034832718, "ending_time": 1583034834366, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171675_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907500152, "ending_time": 1582907500238, "color":c1(0)}, {"starting_time": 1582907500238, "ending_time": 1583050386806, "color":c2(0), "label": "1d 15h 41m 28s \/ 11.5 MB"}, {"starting_time": 1583050386806, "ending_time": 1583050388087, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171675_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907500236, "ending_time": 1582907500342, "color":c1(0)}, {"starting_time": 1582907500342, "ending_time": 1583043958564, "color":c2(0), "label": "1d 13h 54m 19s \/ 11.9 MB"}, {"starting_time": 1583043958564, "ending_time": 1583043959678, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171676_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582907500508, "ending_time": 1582907500787, "color":c1(0)}, {"starting_time": 1582907500787, "ending_time": 1583038606678, "color":c2(0), "label": "1d 12h 25m 8s \/ 11.9 MB"}, {"starting_time": 1583038606678, "ending_time": 1583038608673, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171676_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582907500715, "ending_time": 1582907500884, "color":c1(0)}, {"starting_time": 1582907500884, "ending_time": 1583028787455, "color":c2(0), "label": "1d 9h 41m 28s \/ 11.8 MB"}, {"starting_time": 1583028787455, "ending_time": 1583028789187, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171664_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1582985514896, "ending_time": 1582985515005, "color":c1(1)}, {"starting_time": 1582985515005, "ending_time": 1582986323352, "color":c2(1), "label": "13m 29s \/ 5.2 GB"}, {"starting_time": 1582986323352, "ending_time": 1582986323938, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171677_1 reads files using kmer-ssr)", "times": [{"starting_time": 1582986495927, "ending_time": 1582986495942, "color":c1(0)}, {"starting_time": 1582986495942, "ending_time": 1583122555052, "color":c2(0), "label": "1d 13h 47m 40s \/ 11.8 MB"}, {"starting_time": 1583122555052, "ending_time": 1583122555591, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171664_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1582989894869, "ending_time": 1582989894906, "color":c1(1)}, {"starting_time": 1582989894906, "ending_time": 1582990794777, "color":c2(1), "label": "15m 1s \/ 5.1 GB"}, {"starting_time": 1582990794777, "ending_time": 1582990795417, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171677_2 reads files using kmer-ssr)", "times": [{"starting_time": 1582990998047, "ending_time": 1582990998076, "color":c1(0)}, {"starting_time": 1582990998076, "ending_time": 1583124770485, "color":c2(0), "label": "1d 13h 9m 33s \/ 11.9 MB"}, {"starting_time": 1583124770485, "ending_time": 1583124771103, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171669_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583013197825, "ending_time": 1583013197852, "color":c1(1)}, {"starting_time": 1583013197852, "ending_time": 1583015122611, "color":c2(1), "label": "32m 5s \/ 8.2 GB"}, {"starting_time": 1583015122611, "ending_time": 1583015123306, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171678_1 reads files using kmer-ssr)", "times": [{"starting_time": 1583014575685, "ending_time": 1583014575725, "color":c1(0)}, {"starting_time": 1583014575725, "ending_time": 1583145661975, "color":c2(0), "label": "1d 12h 24m 47s \/ 11.8 MB"}, {"starting_time": 1583145661975, "ending_time": 1583145662415, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171663_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583027449120, "ending_time": 1583027449146, "color":c1(1)}, {"starting_time": 1583027449146, "ending_time": 1583028181041, "color":c2(1), "label": "12m 13s \/ 10.8 GB"}, {"starting_time": 1583028181041, "ending_time": 1583028181821, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171678_2 reads files using kmer-ssr)", "times": [{"starting_time": 1583028578758, "ending_time": 1583028578806, "color":c1(0)}, {"starting_time": 1583028578806, "ending_time": 1583141634483, "color":c2(0), "label": "1d 7h 24m 16s \/ 11.8 MB"}, {"starting_time": 1583141634483, "ending_time": 1583141635122, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171676_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583028789342, "ending_time": 1583028789386, "color":c1(1)}, {"starting_time": 1583028789386, "ending_time": 1583029392875, "color":c2(1), "label": "10m 4s \/ 7.6 GB"}, {"starting_time": 1583029392875, "ending_time": 1583029393672, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171679_1 reads files using kmer-ssr)", "times": [{"starting_time": 1583030010300, "ending_time": 1583030010369, "color":c1(0)}, {"starting_time": 1583030010369, "ending_time": 1583159017766, "color":c2(0), "label": "1d 11h 50m 8s \/ 11.8 MB"}, {"starting_time": 1583159017766, "ending_time": 1583159018413, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171674_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583034834729, "ending_time": 1583034834767, "color":c1(1)}, {"starting_time": 1583034834767, "ending_time": 1583035826589, "color":c2(1), "label": "16m 33s \/ 10.2 GB"}, {"starting_time": 1583035826589, "ending_time": 1583035827410, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171679_2 reads files using kmer-ssr)", "times": [{"starting_time": 1583035894282, "ending_time": 1583035894371, "color":c1(0)}, {"starting_time": 1583035894371, "ending_time": 1583155669855, "color":c2(0), "label": "1d 9h 16m 16s \/ 11.8 MB"}, {"starting_time": 1583155669855, "ending_time": 1583155670459, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171670_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583036557608, "ending_time": 1583036557710, "color":c1(1)}, {"starting_time": 1583036557710, "ending_time": 1583037733573, "color":c2(1), "label": "19m 36s \/ 9.7 GB"}, {"starting_time": 1583037733573, "ending_time": 1583037733900, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171680_1 reads files using kmer-ssr)", "times": [{"starting_time": 1583036913760, "ending_time": 1583036913768, "color":c1(0)}, {"starting_time": 1583036913768, "ending_time": 1583114230899, "color":c2(0), "label": "21h 28m 38s \/ 11.6 MB"}, {"starting_time": 1583114230899, "ending_time": 1583114231592, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171676_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583038608925, "ending_time": 1583038608972, "color":c1(1)}, {"starting_time": 1583038608972, "ending_time": 1583039238082, "color":c2(1), "label": "10m 30s \/ 7.8 GB"}, {"starting_time": 1583039238082, "ending_time": 1583039238733, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171680_2 reads files using kmer-ssr)", "times": [{"starting_time": 1583038921779, "ending_time": 1583038921811, "color":c1(0)}, {"starting_time": 1583038921811, "ending_time": 1583100160836, "color":c2(0), "label": "17h 40s \/ 11.8 MB"}, {"starting_time": 1583100160836, "ending_time": 1583100161332, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171672_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583041142703, "ending_time": 1583041142812, "color":c1(1)}, {"starting_time": 1583041142812, "ending_time": 1583041989474, "color":c2(1), "label": "14m 7s \/ 10.3 GB"}, {"starting_time": 1583041989474, "ending_time": 1583041989975, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171681_1 reads files using kmer-ssr)", "times": [{"starting_time": 1583041661350, "ending_time": 1583041661454, "color":c1(0)}, {"starting_time": 1583041661454, "ending_time": 1583095788801, "color":c2(0), "label": "15h 2m 8s \/ 11.7 MB"}, {"starting_time": 1583095788801, "ending_time": 1583095789289, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171669_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583042601539, "ending_time": 1583042601611, "color":c1(1)}, {"starting_time": 1583042601611, "ending_time": 1583043130010, "color":c2(1), "label": "8m 49s \/ 8.4 GB"}, {"starting_time": 1583043130010, "ending_time": 1583043130393, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171681_2 reads files using kmer-ssr)", "times": [{"starting_time": 1583043055475, "ending_time": 1583043055548, "color":c1(0)}, {"starting_time": 1583043055548, "ending_time": 1583104714028, "color":c2(0), "label": "17h 7m 39s \/ 11.7 MB"}, {"starting_time": 1583104714028, "ending_time": 1583104714343, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171675_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583043959859, "ending_time": 1583043959878, "color":c1(1)}, {"starting_time": 1583043959878, "ending_time": 1583044578378, "color":c2(1), "label": "10m 19s \/ 10.2 GB"}, {"starting_time": 1583044578378, "ending_time": 1583044578806, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171663_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583044588439, "ending_time": 1583044588464, "color":c1(1)}, {"starting_time": 1583044588464, "ending_time": 1583045119277, "color":c2(1), "label": "8m 51s \/ 11.1 GB"}, {"starting_time": 1583045119277, "ending_time": 1583045119664, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171682_1 reads files using kmer-ssr)", "times": [{"starting_time": 1583044656820, "ending_time": 1583044656884, "color":c1(0)}, {"starting_time": 1583044656884, "ending_time": 1583119041178, "color":c2(0), "label": "20h 39m 45s \/ 11.7 MB"}, {"starting_time": 1583119041178, "ending_time": 1583119041561, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171682_2 reads files using kmer-ssr)", "times": [{"starting_time": 1583045124469, "ending_time": 1583045124570, "color":c1(0)}, {"starting_time": 1583045124570, "ending_time": 1583110028787, "color":c2(0), "label": "18h 1m 45s \/ 11.8 MB"}, {"starting_time": 1583110028787, "ending_time": 1583110029181, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171666_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583045919319, "ending_time": 1583045919403, "color":c1(1)}, {"starting_time": 1583045919403, "ending_time": 1583046810236, "color":c2(1), "label": "14m 51s \/ 11.5 GB"}, {"starting_time": 1583046810236, "ending_time": 1583046810683, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171683_1 reads files using kmer-ssr)", "times": [{"starting_time": 1583046409717, "ending_time": 1583046409784, "color":c1(0)}, {"starting_time": 1583046409784, "ending_time": 1583121565132, "color":c2(0), "label": "20h 52m 36s \/ 11.8 MB"}, {"starting_time": 1583121565132, "ending_time": 1583121565593, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171672_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583048209045, "ending_time": 1583048209050, "color":c1(1)}, {"starting_time": 1583048209050, "ending_time": 1583048873407, "color":c2(1), "label": "11m 5s \/ 10.2 GB"}, {"starting_time": 1583048873407, "ending_time": 1583048873861, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171683_2 reads files using kmer-ssr)", "times": [{"starting_time": 1583048640795, "ending_time": 1583048640863, "color":c1(0)}, {"starting_time": 1583048640863, "ending_time": 1583116492013, "color":c2(0), "label": "18h 50m 52s \/ 11.8 MB"}, {"starting_time": 1583116492013, "ending_time": 1583116492449, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171662_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583049314577, "ending_time": 1583049314605, "color":c1(1)}, {"starting_time": 1583049314605, "ending_time": 1583050031518, "color":c2(1), "label": "11m 57s \/ 11.7 GB"}, {"starting_time": 1583050031518, "ending_time": 1583050031839, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171673_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583049860546, "ending_time": 1583049860659, "color":c1(1)}, {"starting_time": 1583049860659, "ending_time": 1583050538595, "color":c2(1), "label": "11m 19s \/ 10.4 GB"}, {"starting_time": 1583050538595, "ending_time": 1583050539123, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171675_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583050388144, "ending_time": 1583050388187, "color":c1(1)}, {"starting_time": 1583050388187, "ending_time": 1583051121274, "color":c2(1), "label": "12m 13s \/ 10.3 GB"}, {"starting_time": 1583051121274, "ending_time": 1583051121591, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171684_1 reads files using kmer-ssr)", "times": [{"starting_time": 1583050541870, "ending_time": 1583050541929, "color":c1(0)}, {"starting_time": 1583050541929, "ending_time": 1583158433513, "color":c2(0), "label": "1d 5h 58m 12s \/ 11.8 MB"}, {"starting_time": 1583158433513, "ending_time": 1583158433795, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171685_1 reads files using kmer-ssr)", "times": [{"starting_time": 1583050608652, "ending_time": 1583050608727, "color":c1(0)}, {"starting_time": 1583050608727, "ending_time": 1583076093048, "color":c2(0), "label": "7h 4m 45s \/ 11.3 MB"}, {"starting_time": 1583076093048, "ending_time": 1583076093347, "color":c1(0)}]},
+{"label": "ComputeReadsFile (Processing SRR7171684_2 reads files using kmer-ssr)", "times": [{"starting_time": 1583051008028, "ending_time": 1583051008093, "color":c1(0)}, {"starting_time": 1583051008093, "ending_time": 1583153250906, "color":c2(0), "label": "1d 4h 24m 3s \/ 11.8 MB"}, {"starting_time": 1583153250906, "ending_time": 1583153251416, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171668_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583053554479, "ending_time": 1583053554486, "color":c1(1)}, {"starting_time": 1583053554486, "ending_time": 1583054023523, "color":c2(1), "label": "7m 50s \/ 11.4 GB"}, {"starting_time": 1583054023523, "ending_time": 1583054024024, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171667_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583053623536, "ending_time": 1583053623607, "color":c1(1)}, {"starting_time": 1583053623607, "ending_time": 1583054329950, "color":c2(1), "label": "11m 47s \/ 12.5 GB"}, {"starting_time": 1583054329950, "ending_time": 1583054330626, "color":c1(1)}]},
+{"label": "ComputeReadsFile (Processing SRR7171685_2 reads files using kmer-ssr)", "times": [{"starting_time": 1583053731542, "ending_time": 1583053731568, "color":c1(0)}, {"starting_time": 1583053731568, "ending_time": 1583079122999, "color":c2(0), "label": "7h 3m 12s \/ 11 MB"}, {"starting_time": 1583079122999, "ending_time": 1583079123536, "color":c1(0)}]},
+{"label": "PrintSignatureFile (Merging SRR7171671_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583054438065, "ending_time": 1583054438151, "color":c1(1)}, {"starting_time": 1583054438151, "ending_time": 1583054990315, "color":c2(1), "label": "9m 13s \/ 10.3 GB"}, {"starting_time": 1583054990315, "ending_time": 1583054990613, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171662_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583055063654, "ending_time": 1583055063724, "color":c1(1)}, {"starting_time": 1583055063724, "ending_time": 1583055700704, "color":c2(1), "label": "10m 37s \/ 12 GB"}, {"starting_time": 1583055700704, "ending_time": 1583055701011, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171670_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583060062872, "ending_time": 1583060062953, "color":c1(1)}, {"starting_time": 1583060062953, "ending_time": 1583060617900, "color":c2(1), "label": "9m 15s \/ 9.9 GB"}, {"starting_time": 1583060617900, "ending_time": 1583060618187, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171673_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583061302504, "ending_time": 1583061302587, "color":c1(1)}, {"starting_time": 1583061302587, "ending_time": 1583061884060, "color":c2(1), "label": "9m 42s \/ 10.6 GB"}, {"starting_time": 1583061884060, "ending_time": 1583061884409, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171671_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583065415722, "ending_time": 1583065415804, "color":c1(1)}, {"starting_time": 1583065415804, "ending_time": 1583066157197, "color":c2(1), "label": "12m 22s \/ 10.5 GB"}, {"starting_time": 1583066157197, "ending_time": 1583066157700, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171665_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583065598190, "ending_time": 1583065598262, "color":c1(1)}, {"starting_time": 1583065598262, "ending_time": 1583066637689, "color":c2(1), "label": "17m 20s \/ 14.9 GB"}, {"starting_time": 1583066637689, "ending_time": 1583066638051, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171668_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583065863342, "ending_time": 1583065863410, "color":c1(1)}, {"starting_time": 1583065863410, "ending_time": 1583066534868, "color":c2(1), "label": "11m 12s \/ 11.2 GB"}, {"starting_time": 1583066534868, "ending_time": 1583066535167, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171661_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583066343209, "ending_time": 1583066343285, "color":c1(1)}, {"starting_time": 1583066343285, "ending_time": 1583067021850, "color":c2(1), "label": "11m 19s \/ 15 GB"}, {"starting_time": 1583067021850, "ending_time": 1583067022115, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171674_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583066633102, "ending_time": 1583066633185, "color":c1(1)}, {"starting_time": 1583066633185, "ending_time": 1583066963129, "color":c2(1), "label": "5m 30s \/ 10.4 GB"}, {"starting_time": 1583066963129, "ending_time": 1583066963369, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171667_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583067266929, "ending_time": 1583067267012, "color":c1(1)}, {"starting_time": 1583067267012, "ending_time": 1583067719896, "color":c2(1), "label": "7m 33s \/ 12.7 GB"}, {"starting_time": 1583067719896, "ending_time": 1583067720159, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171666_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583070410885, "ending_time": 1583070410973, "color":c1(1)}, {"starting_time": 1583070410973, "ending_time": 1583071041879, "color":c2(1), "label": "10m 32s \/ 11.8 GB"}, {"starting_time": 1583071041879, "ending_time": 1583071042503, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171685_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583076093362, "ending_time": 1583076093448, "color":c1(1)}, {"starting_time": 1583076093448, "ending_time": 1583076174593, "color":c2(1), "label": "1m 21s \/ 2.9 GB"}, {"starting_time": 1583076174593, "ending_time": 1583076174813, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171685_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583079123576, "ending_time": 1583079123636, "color":c1(1)}, {"starting_time": 1583079123636, "ending_time": 1583079258824, "color":c2(1), "label": "2m 16s \/ 2.8 GB"}, {"starting_time": 1583079258824, "ending_time": 1583079259516, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171665_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583083779042, "ending_time": 1583083779127, "color":c1(1)}, {"starting_time": 1583083779127, "ending_time": 1583084735106, "color":c2(1), "label": "15m 56s \/ 15.2 GB"}, {"starting_time": 1583084735106, "ending_time": 1583084735325, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171681_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583095789368, "ending_time": 1583095789390, "color":c1(1)}, {"starting_time": 1583095789390, "ending_time": 1583096009805, "color":c2(1), "label": "3m 41s \/ 6.3 GB"}, {"starting_time": 1583096009805, "ending_time": 1583096010196, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171680_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583100161346, "ending_time": 1583100161432, "color":c1(1)}, {"starting_time": 1583100161432, "ending_time": 1583100434678, "color":c2(1), "label": "4m 34s \/ 7.1 GB"}, {"starting_time": 1583100434678, "ending_time": 1583100434952, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171661_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583104285625, "ending_time": 1583104285711, "color":c1(1)}, {"starting_time": 1583104285711, "ending_time": 1583105140692, "color":c2(1), "label": "14m 15s \/ 15.3 GB"}, {"starting_time": 1583105140692, "ending_time": 1583105141017, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171681_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583104714366, "ending_time": 1583104714442, "color":c1(1)}, {"starting_time": 1583104714442, "ending_time": 1583105171640, "color":c2(1), "label": "7m 38s \/ 6.1 GB"}, {"starting_time": 1583105171640, "ending_time": 1583105171882, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171682_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583110029193, "ending_time": 1583110029281, "color":c1(1)}, {"starting_time": 1583110029281, "ending_time": 1583110231780, "color":c2(1), "label": "3m 23s \/ 6.8 GB"}, {"starting_time": 1583110231780, "ending_time": 1583110231968, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171680_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583114231605, "ending_time": 1583114231692, "color":c1(1)}, {"starting_time": 1583114231692, "ending_time": 1583114820319, "color":c2(1), "label": "9m 49s \/ 7.3 GB"}, {"starting_time": 1583114820319, "ending_time": 1583114820639, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171683_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583116492509, "ending_time": 1583116492549, "color":c1(1)}, {"starting_time": 1583116492549, "ending_time": 1583116721432, "color":c2(1), "label": "3m 49s \/ 6.5 GB"}, {"starting_time": 1583116721432, "ending_time": 1583116721676, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171682_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583119041619, "ending_time": 1583119041661, "color":c1(1)}, {"starting_time": 1583119041661, "ending_time": 1583119356446, "color":c2(1), "label": "5m 15s \/ 7 GB"}, {"starting_time": 1583119356446, "ending_time": 1583119356686, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171683_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583121565661, "ending_time": 1583121565693, "color":c1(1)}, {"starting_time": 1583121565693, "ending_time": 1583121831724, "color":c2(1), "label": "4m 26s \/ 6.7 GB"}, {"starting_time": 1583121831724, "ending_time": 1583121831970, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171677_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583122555605, "ending_time": 1583122555691, "color":c1(1)}, {"starting_time": 1583122555691, "ending_time": 1583122936187, "color":c2(1), "label": "6m 21s \/ 11.4 GB"}, {"starting_time": 1583122936187, "ending_time": 1583122936376, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171677_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583124771132, "ending_time": 1583124771204, "color":c1(1)}, {"starting_time": 1583124771204, "ending_time": 1583125096514, "color":c2(1), "label": "5m 26s \/ 11.2 GB"}, {"starting_time": 1583125096514, "ending_time": 1583125096715, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171678_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583141635163, "ending_time": 1583141635222, "color":c1(1)}, {"starting_time": 1583141635222, "ending_time": 1583142344872, "color":c2(1), "label": "11m 50s \/ 13.4 GB"}, {"starting_time": 1583142344872, "ending_time": 1583142345095, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171678_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583145662574, "ending_time": 1583145662616, "color":c1(1)}, {"starting_time": 1583145662616, "ending_time": 1583146087986, "color":c2(1), "label": "7m 6s \/ 13.7 GB"}, {"starting_time": 1583146087986, "ending_time": 1583146088219, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171684_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583153251428, "ending_time": 1583153251516, "color":c1(1)}, {"starting_time": 1583153251516, "ending_time": 1583153639309, "color":c2(1), "label": "6m 28s \/ 13.6 GB"}, {"starting_time": 1583153639309, "ending_time": 1583153639538, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171679_2 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583155670520, "ending_time": 1583155670559, "color":c1(1)}, {"starting_time": 1583155670559, "ending_time": 1583156137174, "color":c2(1), "label": "7m 47s \/ 15.5 GB"}, {"starting_time": 1583156137174, "ending_time": 1583156137449, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171684_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583158433809, "ending_time": 1583158433895, "color":c1(1)}, {"starting_time": 1583158433895, "ending_time": 1583158820763, "color":c2(1), "label": "6m 27s \/ 14 GB"}, {"starting_time": 1583158820763, "ending_time": 1583158820962, "color":c1(1)}]},
+{"label": "PrintSignatureFile (Merging SRR7171679_1 metadata and SSR signature files into complete signature json file)", "times": [{"starting_time": 1583159018429, "ending_time": 1583159018514, "color":c1(1)}, {"starting_time": 1583159018514, "ending_time": 1583159576769, "color":c2(1), "label": "9m 19s \/ 15.9 GB"}, {"starting_time": 1583159576769, "ending_time": 1583159576977, "color":c1(1)}]}
+]
+
+
+function getTickFormat() {
+  var MIN = 1000 * 60
+  var HOUR = MIN * 60
+  var DAY = HOUR * 24
+  var delta = (endingMillis - beginningMillis)
+
+  if( delta < 2 * MIN ) {
+    return {
+      format: d3.time.format("%S"),
+      tickTime: d3.time.seconds,
+      tickInterval: 5,
+      tickSize: 6
+    }
+  }
+
+  if( delta < 2 * HOUR ) {
+    return {
+      format: d3.time.format("%M"),
+      tickTime: d3.time.minutes,
+      tickInterval: 5,
+      tickSize: 6
+    }
+  }
+
+  if( delta < 2 * DAY ) {
+    return {
+      format: d3.time.format("%H:%M"),
+      tickTime: d3.time.hours,
+      tickInterval: 1,
+      tickSize: 6
+    }
+  }
+
+  if( delta <= 7 * DAY ) {
+    return {
+      format: d3.time.format("%b %e %H:%M"),
+      tickTime: d3.time.hours,
+      tickInterval: 6,
+      tickSize: 6
+    }
+  }
+
+  return {
+    format: d3.time.format("%b %e"),
+    tickTime: d3.time.days,
+    tickInterval: 1,
+    tickSize: 6
+  }
+}
+
+function getLabelMargin(scale) {
+    $('<span class="labelSpan" style="display: none"></span>').appendTo('body');
+
+    var labelMargin = 0
+    $.each(data, function (key, value) {
+      labelMargin = Math.max(labelMargin, $('.labelSpan').html(value.label).width());
+    });
+
+    $('.labelSpan').remove();
+
+    return (labelMargin * scale);
+}
+
+function render() {
+  handler=null;
+  $("#timeline").empty()
+  $('#label_elapsed').text(elapsed)
+  $('#label_launch').text( d3.time.format('%d %b %Y %H:%M')(new Date(beginningMillis)) )
+
+  var width = $(window).width();
+  var chart = d3.timeline()
+    .stack() // toggles graph stacking
+    .margin({left:getLabelMargin(0.85), right:100, top:0, bottom:0})
+    .tickFormat( getTickFormat() )
+    .rowSeperators('#f5f5f5')
+    .showTimeAxisTick()
+    ;
+  var svg = d3.select("#timeline").append("svg").attr("width", width).datum(data).call(chart);
+}
+
+function hrz() {
+if( handler != null ) clearTimeout(handler)
+  handler = setTimeout(render, 150);
+}
+
+$(document).ready(render)
+$(window).resize(hrz); // resize the applet on window resize
+</script>
+</head>
+
+<body>
+<div>
+  <h3>Processes execution timeline</h3>
+  <p>
+    Launch time: <span id='label_launch'> </span><br>
+    Elapsed time: <span id='label_elapsed'> </span><br>
+    Legend: job wall time / memory usage (RAM) <span id='label_legend'> </span>
+  </p>
+  <div id="timeline"></div>
+</div>
+
+<div id='footer'>
+  Created with Nextflow -- <a href='http://www.nextflow.io' target='_blank'>http://nextflow.io</a>
+</div>
+
+<script type="text/javascript">
+var prot = (("https:" == document.location.protocol) ? "https://" : "http://");
+document.write(unescape("%3Clink href='" + prot + "fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css' %3E%3C/link%3E"));
+</script>
+</body>
+</html>
