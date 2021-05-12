@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "bootstrap-vue": "^2.2.2",
-    "chart.js": "^2.9.3",
+    "chart.js": "^2.9.4",
     "chartjs-plugin-zoom": "^0.7.5",
     "color-hash": "^1.0.3",
     "jquery": "^3.4.1",
